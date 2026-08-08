@@ -14,7 +14,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev zip git
-          # Download Proton Clang (Toolchain pública e rápida)
           git clone https://github.com/kdrag0n/proton-clang.git --depth=1 clang
 
       - name: Inject KernelSU
@@ -27,8 +26,8 @@ jobs:
           export ARCH=arm64
           export SUBARCH=arm64
           
-          # Configuração base do Moto G84
-          make O=out ARCH=arm64 bangkk_defconfig
+          # Tenta carregar o defconfig da Motorola (vendor) ou o padrão do SM6375
+          make O=out ARCH=arm64 vendor/bangkk_defconfig || make O=out ARCH=arm64 vendor/sm6375_defconfig || make O=out ARCH=arm64 bangkk_defconfig
           
           # Ativa o KernelSU no defconfig
           echo "CONFIG_KSU=y" >> out/.config
