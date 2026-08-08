@@ -14,7 +14,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev zip git
-          git clone https://github.com/kdrag0n/proton-clang.git --depth=1 clang
+          # Baixa o ZyC Clang (Compatível com GKI e Ubuntu mais recente)
+          wget https://github.com/ZyC2001/ZyC-clang/releases/download/18.0.0-20231201/ZyC-clang-18.0.0.tar.gz
+          mkdir clang
+          tar -xf ZyC-clang-18.0.0.tar.gz -C clang/
+          rm ZyC-clang-18.0.0.tar.gz
 
       - name: Inject KernelSU
         run: |
@@ -26,14 +30,14 @@ jobs:
           export ARCH=arm64
           export SUBARCH=arm64
           
-          # Tenta carregar o defconfig da Motorola (vendor) ou o padrão do SM6375
+          # Carrega o defconfig do Moto G84
           make O=out ARCH=arm64 vendor/bangkk_defconfig || make O=out ARCH=arm64 vendor/sm6375_defconfig || make O=out ARCH=arm64 bangkk_defconfig
           
-          # Ativa o KernelSU no defconfig
+          # Ativa o KernelSU
           echo "CONFIG_KSU=y" >> out/.config
           
           # Compila o Kernel
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
