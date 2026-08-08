@@ -1,0 +1,43 @@
+name: Build KernelSU for Moto G84
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev zip git
+          # Clonar Clang/Toolchain
+          git clone https://gitlab.com/LeC23/clang-and-gcc-toolchains.git --depth=1 clang
+
+      - name: Inject KernelSU
+        run: |
+          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+
+      - name: Compile Kernel
+        run: |
+          export PATH=$PWD/clang/bin:$PATH
+          export ARCH=arm64
+          export SUBARCH=arm64
+          
+          # Gera a configuração base do Moto G84
+          make O=out ARCH=arm64 bangkk_defconfig
+          
+          # Ativa o KernelSU no defconfig
+          echo "CONFIG_KSU=y" >> out/.config
+          
+          # Compila o Kernel
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-
+
+      - name: Upload Kernel Image
+        uses: actions/upload-artifact@v3
+        with:
+          name: KernelSU-MotoG84
+          path: out/arch/arm64/boot/Image.gz
