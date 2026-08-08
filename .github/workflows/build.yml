@@ -14,8 +14,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev zip git
-          # Clonar Clang/Toolchain
-          git clone https://gitlab.com/LeC23/clang-and-gcc-toolchains.git --depth=1 clang
+          # Download Proton Clang (Toolchain pública e rápida)
+          git clone https://github.com/kdrag0n/proton-clang.git --depth=1 clang
 
       - name: Inject KernelSU
         run: |
@@ -27,7 +27,7 @@ jobs:
           export ARCH=arm64
           export SUBARCH=arm64
           
-          # Gera a configuração base do Moto G84
+          # Configuração base do Moto G84
           make O=out ARCH=arm64 bangkk_defconfig
           
           # Ativa o KernelSU no defconfig
