@@ -13,12 +13,7 @@ jobs:
       - name: Setup Build Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev zip git
-          # Baixa o ZyC Clang (Compatível com GKI e Ubuntu mais recente)
-          wget https://github.com/ZyC2001/ZyC-clang/releases/download/18.0.0-20231201/ZyC-clang-18.0.0.tar.gz
-          mkdir clang
-          tar -xf ZyC-clang-18.0.0.tar.gz -C clang/
-          rm ZyC-clang-18.0.0.tar.gz
+          sudo apt-get install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev zip git clang lld gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
       - name: Inject KernelSU
         run: |
@@ -26,7 +21,6 @@ jobs:
 
       - name: Compile Kernel
         run: |
-          export PATH=$PWD/clang/bin:$PATH
           export ARCH=arm64
           export SUBARCH=arm64
           
@@ -36,8 +30,8 @@ jobs:
           # Ativa o KernelSU
           echo "CONFIG_KSU=y" >> out/.config
           
-          # Compila o Kernel
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          # Compila o Kernel usando o Clang nativo do sistema
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang HOSTCC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
